@@ -1,23 +1,7 @@
 <!-- screenshot here -->
 
-# EggTimer
 
-Floating macOS egg timer. Hover for controls. Always on top.
+<img width="73" height="94" alt="egg" src="https://github.com/user-attachments/assets/06161a8e-5dd1-4bfc-96da-515f5db51d6e"/>
 
-## Run
 
-```bash
-swift run
-```
-
-## Share
-
-```bash
-./scripts/package.sh
-```
-
-Send `dist/EggTimer.zip`. First open: right-click → Open.
-
-## Stack
-
-SwiftUI · Swift Package Manager · macOS 14+
+Always on-top floating macOS egg timer. Hover for controls.
