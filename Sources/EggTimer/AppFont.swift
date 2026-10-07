@@ -1,3 +1,4 @@
+import AppKit
 import CoreText
 import SwiftUI
 
@@ -27,10 +28,10 @@ enum EggTheme {
 struct EggPillButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(AppFont.playful(size: 16))
+            .font(AppFont.playful(size: 24))
             .foregroundStyle(EggTheme.brown)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 2)
             .background(EggTheme.cream.opacity(configuration.isPressed ? 0.75 : 1))
             .clipShape(Capsule())
             .overlay {
@@ -50,5 +51,18 @@ extension View {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(EggTheme.yolk.opacity(0.35), lineWidth: 1)
             }
+            .background(WindowDragBlocker())
     }
+}
+
+struct WindowDragBlocker: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        NonDraggableView()
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+private final class NonDraggableView: NSView {
+    override var mouseDownCanMoveWindow: Bool { false }
 }

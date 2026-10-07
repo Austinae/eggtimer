@@ -18,7 +18,7 @@ struct EggTimerApp: App {
                 }
         }
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 120, height: 182)
+        .defaultSize(width: 160, height: 266)
     }
 }
 
@@ -65,7 +65,7 @@ private final class TransparentWindowView: NSView {
         window.isMovableByWindowBackground = true
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.setContentSize(NSSize(width: 120, height: 182))
+        window.setContentSize(NSSize(width: 160, height: 266))
         window.orderFrontRegardless()
 
         if spaceObserver == nil {

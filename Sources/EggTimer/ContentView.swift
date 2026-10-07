@@ -1,24 +1,6 @@
 import AppKit
 import SwiftUI
 
-enum TimerDuration: Int, CaseIterable, Identifiable {
-    case ten = 10
-    case fifteen = 900
-    case thirty = 1800
-    case sixty = 3600
-
-    var id: Int { rawValue }
-
-    var label: String {
-        switch self {
-        case .ten: "10s (test)"
-        case .fifteen: "15m"
-        case .thirty: "30m"
-        case .sixty: "1h"
-        }
-    }
-}
-
 private enum EggAsset {
     static let image: NSImage? = {
         guard let url = Bundle.module.url(forResource: "egg", withExtension: "png") else {
@@ -29,26 +11,31 @@ private enum EggAsset {
 }
 
 struct ContentView: View {
-    @State private var duration: TimerDuration = .thirty
-    @State private var secondsRemaining = TimerDuration.thirty.rawValue
+    @State private var durationIndex = 3
+    @State private var secondsRemaining = TimerDurationOption.all[3].seconds
     @State private var isRunning = false
     @State private var isDone = false
     @State private var showChrome = false
 
     private let eggHeight: CGFloat = 114
-    private let controlsHeight: CGFloat = 68
-    private let windowWidth: CGFloat = 120
-    private let windowHeight: CGFloat = 114 + 68
+    private let controlsHeight: CGFloat = 152
+    private let windowWidth: CGFloat = 160
+    private let windowHeight: CGFloat = 114 + 152
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let resetAnimation = Animation.timingCurve(0.33, 1, 0.68, 1, duration: 0.85)
     private let tickAnimation = Animation.timingCurve(0.33, 1, 0.68, 1, duration: 1.0)
+
+    private var durationSeconds: Int {
+        TimerDurationOption.all[durationIndex].seconds
+    }
+
     private var timeLeftFraction: Double {
-        guard duration.rawValue > 0 else { return 0 }
-        return Double(secondsRemaining) / Double(duration.rawValue)
+        guard durationSeconds > 0 else { return 0 }
+        return Double(secondsRemaining) / Double(durationSeconds)
     }
 
     private var isSessionActive: Bool {
-        !isDone && (isRunning || secondsRemaining < duration.rawValue)
+        !isDone && (isRunning || secondsRemaining < durationSeconds)
     }
 
     var body: some View {
@@ -84,7 +71,7 @@ struct ContentView: View {
             }
             .frame(height: eggHeight)
 
-            VStack(spacing: 6) {
+            VStack(spacing: 8) {
                 if isSessionActive {
                     HStack(spacing: 12) {
                         if isRunning {
@@ -113,25 +100,16 @@ struct ContentView: View {
                     .foregroundStyle(EggTheme.brown)
                     .font(.system(size: 11, weight: .semibold))
                 } else {
+                    DurationSlider(selectedIndex: $durationIndex)
+
                     Button("Start", action: startTimer)
                         .buttonStyle(EggPillButtonStyle())
-
-                    Picker("Duration", selection: $duration) {
-                        ForEach(TimerDuration.allCases) { option in
-                            Text(option.label)
-                                .font(AppFont.playful(size: 14))
-                                .tag(option)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
-                    .tint(EggTheme.brown)
                 }
             }
             .eggControlPanel()
             .opacity(showChrome ? 1 : 0)
             .allowsHitTesting(showChrome)
-            .frame(height: controlsHeight)
+            .frame(minHeight: controlsHeight)
         }
         .frame(width: windowWidth, height: windowHeight, alignment: .top)
         .background(Color.clear)
@@ -140,9 +118,9 @@ struct ContentView: View {
         .onHover { hovering in
             showChrome = hovering
         }
-        .onChange(of: duration) { _, newDuration in
+        .onChange(of: durationIndex) { _, newIndex in
             guard !isRunning, !isDone else { return }
-            secondsRemaining = newDuration.rawValue
+            secondsRemaining = TimerDurationOption.all[newIndex].seconds
         }
         .onReceive(timer) { _ in
             guard isRunning, secondsRemaining > 0 else { return }
@@ -176,7 +154,7 @@ struct ContentView: View {
 
         if isDone || secondsRemaining == 0 {
             withAnimation(resetAnimation) {
-                secondsRemaining = duration.rawValue
+                secondsRemaining = durationSeconds
                 isDone = false
             }
             isRunning = true
@@ -189,7 +167,7 @@ struct ContentView: View {
     private func restartTimer() {
         if isDone || secondsRemaining == 0 {
             withAnimation(resetAnimation) {
-                secondsRemaining = duration.rawValue
+                secondsRemaining = durationSeconds
                 isDone = false
             }
             isRunning = true
@@ -199,7 +177,7 @@ struct ContentView: View {
         var transaction = Transaction()
         transaction.disablesAnimations = true
         withTransaction(transaction) {
-            secondsRemaining = duration.rawValue
+            secondsRemaining = durationSeconds
             isDone = false
         }
         isRunning = true
@@ -209,7 +187,7 @@ struct ContentView: View {
         var transaction = Transaction()
         transaction.disablesAnimations = true
         withTransaction(transaction) {
-            secondsRemaining = duration.rawValue
+            secondsRemaining = durationSeconds
             isRunning = false
             isDone = false
         }
