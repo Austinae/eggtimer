@@ -2,45 +2,21 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-BUILD="$ROOT/.build/arm64-apple-macosx/release"
 APP="$ROOT/dist/EggTimer.app"
 
 cd "$ROOT"
-swift build -c release
+BIN="$(swift build -c release --show-bin-path)"
+EXEC="$BIN/EggTimer"
+BUNDLE="$BIN/EggTimer_EggTimer.bundle"
 
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-cp "$BUILD/EggTimer" "$APP/Contents/MacOS/EggTimer"
-cp -R "$BUILD/EggTimer_EggTimer.bundle" "$APP/EggTimer_EggTimer.bundle"
+cp "$EXEC" "$APP/Contents/MacOS/EggTimer"
+cp -R "$BUNDLE" "$APP/EggTimer_EggTimer.bundle"
+cp "$ROOT/App/Info.plist" "$APP/Contents/Info.plist"
+iconutil -c icns "$ROOT/AppIcon.iconset" -o "$APP/Contents/Resources/AppIcon.icns"
 chmod +x "$APP/Contents/MacOS/EggTimer"
-
-cat > "$APP/Contents/Info.plist" <<'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleDevelopmentRegion</key>
-    <string>en</string>
-    <key>CFBundleExecutable</key>
-    <string>EggTimer</string>
-    <key>CFBundleIdentifier</key>
-    <string>com.eggtimer.app</string>
-    <key>CFBundleName</key>
-    <string>EggTimer</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
-    <key>CFBundleVersion</key>
-    <string>1</string>
-    <key>LSMinimumSystemVersion</key>
-    <string>14.0</string>
-    <key>NSHighResolutionCapable</key>
-    <true/>
-</dict>
-</plist>
-EOF
 
 rm -f "$ROOT/dist/EggTimer.zip"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$ROOT/dist/EggTimer.zip"

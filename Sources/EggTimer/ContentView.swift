@@ -18,9 +18,17 @@ struct ContentView: View {
     @State private var showChrome = false
 
     private let eggHeight: CGFloat = 114
-    private let controlsHeight: CGFloat = 152
+    private let idleControlsHeight: CGFloat = 152
+    private let activeControlsHeight: CGFloat = 40
     private let windowWidth: CGFloat = 160
-    private let windowHeight: CGFloat = 114 + 152
+
+    private var controlsHeight: CGFloat {
+        isSessionActive ? activeControlsHeight : idleControlsHeight
+    }
+
+    private var windowHeight: CGFloat {
+        eggHeight + controlsHeight
+    }
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let resetAnimation = Animation.timingCurve(0.33, 1, 0.68, 1, duration: 0.85)
     private let tickAnimation = Animation.timingCurve(0.33, 1, 0.68, 1, duration: 1.0)
@@ -109,9 +117,13 @@ struct ContentView: View {
             .eggControlPanel()
             .opacity(showChrome ? 1 : 0)
             .allowsHitTesting(showChrome)
-            .frame(minHeight: controlsHeight)
+            .frame(height: controlsHeight, alignment: .top)
         }
         .frame(width: windowWidth, height: windowHeight, alignment: .top)
+        .preference(
+            key: WindowSizePreferenceKey.self,
+            value: CGSize(width: windowWidth, height: windowHeight)
+        )
         .background(Color.clear)
         .contentShape(Rectangle())
         .animation(.easeOut(duration: 0.15), value: showChrome)

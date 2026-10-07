@@ -10,25 +10,47 @@ struct EggTimerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .background(WindowAccessor())
-                .onAppear {
-                    NSApp.setActivationPolicy(.regular)
-                    NSApp.activate(ignoringOtherApps: true)
-                }
+            WindowRoot {
+                ContentView()
+                    .onAppear {
+                        NSApp.setActivationPolicy(.regular)
+                        NSApp.activate(ignoringOtherApps: true)
+                    }
+            }
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 160, height: 266)
     }
 }
 
+struct WindowSizePreferenceKey: PreferenceKey {
+    static let defaultValue = CGSize(width: 160, height: 266)
+
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        value = nextValue()
+    }
+}
+
+private struct WindowRoot<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+    @State private var contentSize = WindowSizePreferenceKey.defaultValue
+
+    var body: some View {
+        content()
+            .onPreferenceChange(WindowSizePreferenceKey.self) { contentSize = $0 }
+            .background(WindowAccessor(size: contentSize))
+    }
+}
+
 private struct WindowAccessor: NSViewRepresentable {
+    let size: CGSize
+
     func makeNSView(context: Context) -> NSView {
         TransparentWindowView()
     }
 
     func updateNSView(_ nsView: NSView, context: Context) {
-        (nsView as? TransparentWindowView)?.configureWindow()
+        (nsView as? TransparentWindowView)?.configureWindow(size: size)
     }
 }
 
@@ -52,7 +74,7 @@ private final class TransparentWindowView: NSView {
         nil
     }
 
-    func configureWindow() {
+    func configureWindow(size: CGSize = WindowSizePreferenceKey.defaultValue) {
         guard let window else { return }
 
         window.styleMask = [.borderless, .fullSizeContentView, .closable]
@@ -65,7 +87,12 @@ private final class TransparentWindowView: NSView {
         window.isMovableByWindowBackground = true
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.setContentSize(NSSize(width: 160, height: 266))
+
+        let targetSize = NSSize(width: size.width, height: size.height)
+        if window.frame.size != targetSize {
+            window.setContentSize(targetSize)
+        }
+
         window.orderFrontRegardless()
 
         if spaceObserver == nil {
